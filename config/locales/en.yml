@@ -4,6 +4,7 @@ en:
   label_rate: Rate
   permission_view_rate: Show rate
   label_rate_cost: Cost
+  field_cost: Cost
   field_billable: Billable
   rate_created_message: Rate was successfully created.
   rate_error_creating_new_rate: Error creating a new Rate.
