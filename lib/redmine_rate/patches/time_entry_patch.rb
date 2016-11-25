@@ -21,55 +21,48 @@ module RedmineRate
           c[:user_id] = user
           c[:project_id] = project unless project.nil?
 
-          TimeEntry.where(c).each do |time_entry|
-            time_entry.save_cached_cost
-          end
+          TimeEntry.where(c).each(&:recalculate_cost!)
         end
       end
 
       module InstanceMethods
-        # Returns the current cost of the TimeEntry based on it's rate and hours
+        # Returns the current cost of the TimeEntry based on it's
+        # billable rate and hours.
         #
         # Is a read-through cache method
-        def cost(options = {})
-          store_to_db = options[:store] || false
-
-          unless read_attribute(:cost)
-            amount = if rate.nil?
-                       Rate.amount_for(user, project, spent_on.to_s)
-                     else
-                       rate.amount
-                     end
-
-            if amount.nil?
-              write_attribute(:cost, 0.0)
-            else
-              if store_to_db
-                # Write the cost to the database for caching
-                update_attribute(:cost, amount.to_f * hours.to_f)
-              else
-                # Cache to object only
-                write_attribute(:cost, amount.to_f * hours.to_f)
-              end
-            end
-          end
-
-          read_attribute(:cost)
+        def cost
+          cost = read_attribute(:cost)
+          return cost if cost
+          write_attribute(:cost, calculate_cost)
         end
 
-        def clear_cost_cache
-          write_attribute(:cost, nil)
-        end
-
-        def save_cached_cost
-          clear_cost_cache
+        # Updates the cost attribute with the recalculated cost value.
+        def recalculate_cost!
+          cost = calculate_cost
           update_attribute(:cost, cost)
+          cost
         end
 
+        # Writes the cost attribute to the model instance with the
+        # recalculated cost value.
         def recalculate_cost
-          clear_cost_cache
-          cost(store: false)
-          true # for callback
+          write_attribute(:cost, calculate_cost)
+        end
+
+        private
+
+        # Returns the cost for this time entry depending on rates set
+        # and whether this time entry is billable or not.
+        def calculate_cost
+          return 0.0 unless billable
+          amount =
+            if rate.nil?
+              Rate.amount_for(user, project, spent_on.to_s)
+            else
+              rate.amount
+            end
+          return 0.0 unless amount
+          amount.to_f * hours.to_f
         end
       end
     end
