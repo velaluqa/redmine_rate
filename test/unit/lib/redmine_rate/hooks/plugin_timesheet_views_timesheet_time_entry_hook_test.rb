@@ -4,6 +4,7 @@ class RedmineRate::Hooks::PluginTimesheetViewsTimesheetTimeEntryTest < ActionCon
   include Redmine::Hook::Helper
 
   def setup
+    RedmineRate.settings[:currency] = 'usd'
     TimeEntryActivity.generate!
   end
 
