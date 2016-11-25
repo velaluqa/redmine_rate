@@ -15,6 +15,8 @@ Rails.configuration.to_prepare do
   require 'redmine_rate/hooks/view_timelog_edit_form_bottom_hook'
 
   # Patches
+  require 'redmine_rate/patches/issue_patch'
+  require 'redmine_rate/patches/issue_query_patch'
   require 'redmine_rate/patches/time_entry_patch'
   require 'redmine_rate/patches/time_entry_query_patch'
   require 'redmine_rate/patches/time_report_patch'
