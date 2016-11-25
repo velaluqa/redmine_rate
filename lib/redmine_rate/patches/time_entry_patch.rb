@@ -9,6 +9,8 @@ module RedmineRate
         base.class_eval do
           belongs_to :rate
           before_save :recalculate_cost
+
+          safe_attributes 'billable'
         end
       end
 

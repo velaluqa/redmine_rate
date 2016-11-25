@@ -12,6 +12,7 @@ Rails.configuration.to_prepare do
   require 'redmine_rate/hooks/plugin_timesheet_views_timesheet_time_entry_sum_hook'
   require 'redmine_rate/hooks/plugin_timesheet_view_timesheets_report_header_tags_hook'
   require 'redmine_rate/hooks/view_layouts_base_html_head_hook'
+  require 'redmine_rate/hooks/view_timelog_edit_form_bottom_hook'
 
   # Patches
   require 'redmine_rate/patches/time_entry_patch'
