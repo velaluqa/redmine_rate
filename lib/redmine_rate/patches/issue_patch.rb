@@ -22,6 +22,24 @@ module RedmineRate
               self_and_descendants.joins(:time_entries).sum("#{TimeEntry.table_name}.cost").to_f || 0.0
             end
         end
+
+        # Returns the number of hours spent on this issue
+        def cost_with_currency
+          number_to_currency(cost)
+        end
+
+        # Returns the total number of hours spent on this issue and its descendants
+        def total_cost_with_currency
+          number_to_currency(total_cost)
+        end
+
+        private
+
+        def number_to_currency(num)
+          locale = User.current.language if User.current.language.present?
+          locale ||= Setting.default_language
+          ActionController::Base.helpers.number_to_currency(num, unit: currency_name(true), locale: locale)
+        end
       end
     end
   end

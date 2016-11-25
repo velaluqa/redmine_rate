@@ -20,13 +20,13 @@ module RedmineRate
           index = (index ? index + 1 : -1)
           # insert the column after total_estimated_hours or at the end
 
-          @available_columns.insert index, QueryColumn.new(:cost,
+          @available_columns.insert index, QueryColumn.new(:cost_with_currency,
                                                            :sortable => "COALESCE((SELECT SUM(cost) FROM #{TimeEntry.table_name} WHERE #{TimeEntry.table_name}.issue_id = #{Issue.table_name}.id), 0)",
                                                            :default_order => 'desc',
                                                            :caption => :label_cost,
                                                            :totalable => true
                                                           )
-          @available_columns.insert index+1, QueryColumn.new(:total_cost,
+          @available_columns.insert index+1, QueryColumn.new(:total_cost_with_currency,
                                                              :sortable => "COALESCE((SELECT SUM(cost) FROM #{TimeEntry.table_name} JOIN #{Issue.table_name} subtasks ON subtasks.id = #{TimeEntry.table_name}.issue_id" +
                                                                           " WHERE subtasks.root_id = #{Issue.table_name}.root_id AND subtasks.lft >= #{Issue.table_name}.lft AND subtasks.rgt <= #{Issue.table_name}.rgt), 0)",
                                                              :default_order => 'desc',
@@ -35,7 +35,7 @@ module RedmineRate
         end
 
         # Returns sum of all the issue's time entries costs
-        def total_for_cost(scope)
+        def total_for_cost_with_currency(scope)
           total = if group_by_column.try(:name) == :project
                     # TODO: remove this when https://github.com/rails/rails/issues/21922 is fixed
                     # We have to do a custom join without the time_entries.project_id column
@@ -45,7 +45,15 @@ module RedmineRate
                   else
                     scope.joins(:time_entries).sum("#{TimeEntry.table_name}.cost")
                   end
-          map_total(total) {|t| t.to_f.round(2)}
+          map_total(total) { |t| number_to_currency(t.to_f.round(2)) }
+        end
+
+        private
+
+        def number_to_currency(num)
+          locale = User.current.language if User.current.language.present?
+          locale ||= Setting.default_language
+          ActionController::Base.helpers.number_to_currency(num, unit: currency_name(true), locale: locale)
         end
       end
     end
